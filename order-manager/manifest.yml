@@ -1,0 +1,7 @@
+---
+applications:
+- name: om
+  host: om-dlb
+  memory: 768MB
+  instances: 1
+  path: target/order-manager-0.0.1-SNAPSHOT.jar

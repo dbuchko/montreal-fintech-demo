@@ -3,10 +3,10 @@ package io.pivotal.om.model;
 public class OrderReply extends OrderRequest {
 
 	private String execID;
-	private Integer cumQty;
+	private int cumQty;
 	private String ordStatus;
-	private Float lastPx;
-	private Integer lastQty;
+	private double lastPx;
+	private int lastQty;
 	
 	public OrderReply() {
 		super();
@@ -21,11 +21,11 @@ public class OrderReply extends OrderRequest {
 		this.execID = execID;
 	}
 
-	public Integer getCumQty() {
+	public int getCumQty() {
 		return cumQty;
 	}
 
-	public void setCumQty(Integer cumQty) {
+	public void setCumQty(int cumQty) {
 		this.cumQty = cumQty;
 	}
 
@@ -37,19 +37,19 @@ public class OrderReply extends OrderRequest {
 		this.ordStatus = ordStatus;
 	}
 
-	public Float getLastPx() {
+	public double getLastPx() {
 		return lastPx;
 	}
 
-	public void setLastPx(Float lastPx) {
+	public void setLastPx(double lastPx) {
 		this.lastPx = lastPx;
 	}
 
-	public Integer getLastQty() {
+	public int getLastQty() {
 		return lastQty;
 	}
 
-	public void setLastQty(Integer lastQty) {
+	public void setLastQty(int lastQty) {
 		this.lastQty = lastQty;
 	}
 	

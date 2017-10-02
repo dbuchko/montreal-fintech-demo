@@ -5,9 +5,9 @@ public class OrderRequest {
 	private String clientId;
 	private String clOrdId;
 	private String orderId;
-	private Float price;
+	private double price;
 	private String side;
-	private Integer orderQty;
+	private int orderQty;
 	private String ordType;
 	
 	public OrderRequest() {
@@ -33,10 +33,10 @@ public class OrderRequest {
 	public void setOrderId(String orderId) {
 		this.orderId = orderId;
 	}
-	public Float getPrice() {
+	public double getPrice() {
 		return price;
 	}
-	public void setPrice(Float price) {
+	public void setPrice(double price) {
 		this.price = price;
 	}
 	public String getSide() {
@@ -45,10 +45,10 @@ public class OrderRequest {
 	public void setSide(String side) {
 		this.side = side;
 	}
-	public Integer getOrderQty() {
+	public int getOrderQty() {
 		return orderQty;
 	}
-	public void setOrderQty(Integer orderQty) {
+	public void setOrderQty(int orderQty) {
 		this.orderQty = orderQty;
 	}
 	public String getOrdType() {
