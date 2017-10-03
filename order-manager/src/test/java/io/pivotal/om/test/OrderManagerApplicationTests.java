@@ -1,4 +1,5 @@
-package com.example.demo;
+package io.pivotal.om.test
+;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

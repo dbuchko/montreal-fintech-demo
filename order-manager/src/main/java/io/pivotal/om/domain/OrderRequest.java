@@ -1,10 +1,9 @@
-package io.pivotal.om.model;
+package io.pivotal.om.domain;
 
 public class OrderRequest {
 
 	private String clientId;
 	private String clOrdId;
-	private String orderId;
 	private double price;
 	private String side;
 	private int orderQty;
@@ -26,12 +25,6 @@ public class OrderRequest {
 	}
 	public void setClOrdId(String clOrdId) {
 		this.clOrdId = clOrdId;
-	}
-	public String getOrderId() {
-		return orderId;
-	}
-	public void setOrderId(String orderId) {
-		this.orderId = orderId;
 	}
 	public double getPrice() {
 		return price;

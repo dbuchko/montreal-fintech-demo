@@ -1,7 +1,8 @@
-package io.pivotal.om.model;
+package io.pivotal.om.domain;
 
 public class OrderReply extends OrderRequest {
 
+	private String orderId;
 	private String execID;
 	private int cumQty;
 	private String ordStatus;
@@ -11,6 +12,14 @@ public class OrderReply extends OrderRequest {
 	public OrderReply() {
 		super();
 		// TODO Auto-generated constructor stub
+	}
+
+	public String getOrderId() {
+		return orderId;
+	}
+
+	public void setOrderId(String orderId) {
+		this.orderId = orderId;
 	}
 
 	public String getExecID() {
