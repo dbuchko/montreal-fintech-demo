@@ -14,6 +14,15 @@ public class OrderRequest {
 		// TODO Auto-generated constructor stub
 	}
 	
+	@Override
+	public String toString() {
+		return "clientId=" + clientId +
+				", clOrdId=" + clOrdId +
+				", price=" + price +
+				", side=" + side +
+				", ordType=" + ordType;
+	}
+	
 	public String getClientId() {
 		return clientId;
 	}

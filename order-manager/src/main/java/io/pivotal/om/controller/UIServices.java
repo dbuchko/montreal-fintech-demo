@@ -1,23 +1,35 @@
 package io.pivotal.om.controller;
 
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import io.pivotal.om.domain.Order;
+import io.pivotal.om.domain.ClientOrder;
 import io.pivotal.om.domain.OrderReply;
 import io.pivotal.om.domain.OrderRequest;
+import io.pivotal.om.repository.OrderRepository;
 
 @RestController
 public class UIServices {
 	
 	Logger logger = LoggerFactory.getLogger(UIServices.class);
-	RestTemplate restTemplate = new RestTemplate();
+	
+	private OrderRepository or;
+	
+	private RestTemplate restTemplate;
+	
+	@Autowired
+	public UIServices(OrderRepository or, RestTemplate restTemplate) {
+		this.or = or;
+		this.restTemplate = restTemplate;
+	}
 	
 	@RequestMapping(value="api/order/{id}", method=RequestMethod.GET)
 	public OrderReply getOrder(OrderRequest orderRequest) {
@@ -49,23 +61,29 @@ public class UIServices {
 		
 	}
 	
-	@RequestMapping(value="api/order", method=RequestMethod.POST)
-	public void placeOrder(OrderRequest orderRequest) {
+	@PostMapping(value="api/order")
+	@Transactional
+	public void placeOrder(@RequestBody OrderRequest orderRequest) {
 		
-		Order order = new Order();
-		String orderId = order.getOrderId();
+		ClientOrder clientOrder = new ClientOrder();
+		ClientOrder newOrder = or.save(clientOrder);
+		or.flush();
+		long orderId = newOrder.getOrderId();
 		
 		logger.debug("Created new order with ID=" + orderId);
 		String url = "http://exchange.apps.pcf.guru/api/order/" + orderId;
 //		restTemplate.put("http://exchange.apps.pcf.guru/api/order", orderRequest);
 //		restTemplate.exchange(url, RequestMethod.PUT, orderRequest, OrderRequest.class, uriVariables)
 		
-		order.setClientId(orderRequest.getClientId());
-		order.setClOrdId(orderRequest.getClOrdId());
-		order.setPrice(orderRequest.getPrice());
-		order.setSide(orderRequest.getSide());
-		order.setOrderQty(orderRequest.getOrderQty());
-		order.setOrdType(orderRequest.getOrdType());
+		logger.debug("orderRequest: " + orderRequest.toString());
+		newOrder.setClientId(orderRequest.getClientId());
+		newOrder.setClOrdId(orderRequest.getClOrdId());
+		newOrder.setPrice(orderRequest.getPrice());
+		newOrder.setSide(orderRequest.getSide());
+		newOrder.setOrderQty(orderRequest.getOrderQty());
+		newOrder.setOrdType(orderRequest.getOrdType());
+		or.save(newOrder);
+		or.flush();
 		
 		return;
 	}

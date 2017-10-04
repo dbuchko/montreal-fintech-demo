@@ -1,18 +1,16 @@
 package io.pivotal.om.domain;
 
-import java.util.UUID;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Table;
 
 @Entity
-public class Order {
+public class ClientOrder {
 	
 	@Id
-	private String orderId;
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private long orderId;
 	
 	private String clientId;
 	private String clOrdId;
@@ -26,12 +24,11 @@ public class Order {
 	private double lastPx;
 	private int lastQty;
 
-	public Order() {
+	public ClientOrder() {
 		super();
-		this.orderId = UUID.randomUUID().toString();
 	}
 	
-	public Order(String orderId, String clientId, String clOrdId, double price, String side, int orderQty, String ordType,
+	public ClientOrder(long orderId, String clientId, String clOrdId, double price, String side, int orderQty, String ordType,
 			String execID, int cumQty, String ordStatus, double lastPx, int lastQty) {
 		super();
 		this.orderId = orderId;
@@ -48,11 +45,11 @@ public class Order {
 		this.lastQty = lastQty;
 	}
 
-	public String getOrderId() {
+	public long getOrderId() {
 		return orderId;
 	}
 
-	public void setOrderId(String orderId) {
+	public void setOrderId(long orderId) {
 		this.orderId = orderId;
 	}
 

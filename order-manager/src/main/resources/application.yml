@@ -3,6 +3,7 @@ spring:
     name: OrderManager
   jpa:
     generate-ddl: true
+    show-sql: true
     
 management:
   security:
