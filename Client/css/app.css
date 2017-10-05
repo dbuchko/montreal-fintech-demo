@@ -1,3 +1,7 @@
-.negative-value {
+.change_column_element {
+	color: green;
+}
+
+.negative_value {
 	color: red;
 }
