@@ -14,22 +14,22 @@ public class ClientOrder {
 	
 	private String clientId;
 	private String clOrdId;
-	private double price;
+	private int price;
 	private String side;
 	private int orderQty;
 	private String ordType;
 	private String execID;
 	private int cumQty;
 	private String ordStatus;
-	private double lastPx;
+	private int lastPx;
 	private int lastQty;
 
 	public ClientOrder() {
 		super();
 	}
 	
-	public ClientOrder(long orderId, String clientId, String clOrdId, double price, String side, int orderQty, String ordType,
-			String execID, int cumQty, String ordStatus, double lastPx, int lastQty) {
+	public ClientOrder(long orderId, String clientId, String clOrdId, int price, String side, int orderQty, String ordType,
+			String execID, int cumQty, String ordStatus, int lastPx, int lastQty) {
 		super();
 		this.orderId = orderId;
 		this.clientId = clientId;
@@ -69,11 +69,11 @@ public class ClientOrder {
 		this.clOrdId = clOrdId;
 	}
 
-	public double getPrice() {
+	public int getPrice() {
 		return price;
 	}
 
-	public void setPrice(double price) {
+	public void setPrice(int price) {
 		this.price = price;
 	}
 
@@ -125,11 +125,11 @@ public class ClientOrder {
 		this.ordStatus = ordStatus;
 	}
 
-	public double getLastPx() {
+	public int getLastPx() {
 		return lastPx;
 	}
 
-	public void setLastPx(double lastPx) {
+	public void setLastPx(int lastPx) {
 		this.lastPx = lastPx;
 	}
 

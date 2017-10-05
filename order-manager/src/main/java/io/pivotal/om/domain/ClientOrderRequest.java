@@ -1,15 +1,16 @@
 package io.pivotal.om.domain;
 
-public class OrderRequest {
+public class ClientOrderRequest {
 
+	private long orderId;
 	private String clientId;
 	private String clOrdId;
-	private double price;
+	private int price;
 	private String side;
 	private int orderQty;
 	private String ordType;
 	
-	public OrderRequest() {
+	public ClientOrderRequest() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
@@ -23,6 +24,14 @@ public class OrderRequest {
 				", ordType=" + ordType;
 	}
 	
+	public long getOrderId() {
+		return orderId;
+	}
+
+	public void setOrderId(long orderId) {
+		this.orderId = orderId;
+	}
+
 	public String getClientId() {
 		return clientId;
 	}
@@ -35,10 +44,10 @@ public class OrderRequest {
 	public void setClOrdId(String clOrdId) {
 		this.clOrdId = clOrdId;
 	}
-	public double getPrice() {
+	public int getPrice() {
 		return price;
 	}
-	public void setPrice(double price) {
+	public void setPrice(int price) {
 		this.price = price;
 	}
 	public String getSide() {

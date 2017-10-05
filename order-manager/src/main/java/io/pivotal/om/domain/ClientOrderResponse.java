@@ -1,24 +1,24 @@
 package io.pivotal.om.domain;
 
-public class OrderReply extends OrderRequest {
+public class ClientOrderResponse extends ClientOrderRequest {
 
-	private String orderId;
+	private long orderId;
 	private String execID;
 	private int cumQty;
 	private String ordStatus;
 	private double lastPx;
 	private int lastQty;
 	
-	public OrderReply() {
+	public ClientOrderResponse() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public String getOrderId() {
+	public long getOrderId() {
 		return orderId;
 	}
 
-	public void setOrderId(String orderId) {
+	public void setOrderId(long orderId) {
 		this.orderId = orderId;
 	}
 
