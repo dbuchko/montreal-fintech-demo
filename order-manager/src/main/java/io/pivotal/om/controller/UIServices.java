@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
@@ -99,7 +100,8 @@ public class UIServices {
 	
 	@PostMapping(value="api/order")
 	@Transactional
-	public void placeOrder(@RequestBody ClientOrderRequest clientOrderRequest) {
+	@ResponseBody
+	public ClientOrder placeOrder(@RequestBody ClientOrderRequest clientOrderRequest) {
 		
 		ClientOrder clientOrder = new ClientOrder();
 		ClientOrder newOrder = or.save(clientOrder);
@@ -121,10 +123,12 @@ public class UIServices {
 		newOrder.setSide(eor[0].getSide());
 		newOrder.setOrderQty(eor[0].getOrderQty());
 		newOrder.setOrdType(eor[0].getOrdType());
+		newOrder.setOrdStatus(eor[0].getOrdStatus());
+		newOrder.setOrdRejReason(eor[0].getOrdRejReason());
 		or.save(newOrder);
 		or.flush();
 		
-		return;
+		return newOrder;
 	}
 	
 }
