@@ -6,6 +6,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -33,13 +35,14 @@ public class UIServices {
 	Logger logger = LoggerFactory.getLogger(UIServices.class);
 	
 	private OrderRepository or;
-	
 	private RestTemplate restTemplate;
+	private DiscoveryClient discoveryClient;
 	
 	@Autowired
-	public UIServices(OrderRepository or, RestTemplate restTemplate) {
+	public UIServices(OrderRepository or, RestTemplate restTemplate, DiscoveryClient discoveryClient) {
 		this.or = or;
 		this.restTemplate = restTemplate;
+		this.discoveryClient = discoveryClient;
 	}
 	
 	@RequestMapping(value="api/order/{id}", method=RequestMethod.GET)
@@ -98,6 +101,24 @@ public class UIServices {
 		
 	}
 	
+	
+	@RequestMapping(value="/api/exchanges", method=RequestMethod.GET)
+	private List<String> getExchanges() {
+		
+		if (discoveryClient==null)
+			logger.error("discoveryClient is NULL!!");
+		
+		List<String> exchanges = discoveryClient.getServices();
+		List<String> names = new ArrayList<String>();
+		
+		for (String exchange : exchanges) {
+			names.add(exchange);
+		}
+		
+		return names;
+	}	
+
+	
 	@PostMapping(value="api/order")
 	@Transactional
 	@ResponseBody
@@ -130,5 +151,5 @@ public class UIServices {
 		
 		return newOrder;
 	}
-	
+
 }

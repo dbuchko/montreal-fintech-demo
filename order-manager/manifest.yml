@@ -6,5 +6,10 @@ applications:
   instances: 1
   path: target/order-manager-0.0.1-SNAPSHOT.jar
   buildpack: java_buildpack_offline
+  
+env:
+  TRUST_CERTS: api.system.pcf.guru
+  
 services:
  - omdb 
+ - eureka
