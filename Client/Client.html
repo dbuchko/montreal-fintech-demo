@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!--<script src="jquery-3.2.1.js"></script>-->
+    <script
+            src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+    <script src="http://knockoutjs.com/downloads/knockout-3.4.2.debug.js"></script>
+    <script src="knockout.mapping-latest.debug.js"></script>
+    <!--<script src="http://ajax.aspnetcdn.com/ajax/signalr/jquery.signalr-2.2.0.min.js"></script>-->
+    <script src="signalr-client.min.js"></script>
+    <script type='text/javascript' src="ko.observableDictionary.js"></script>
+
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>-->
+</head>
+<body>
+<script>
+    $(() => {
+
+
+
+        var OrderViewModel = function() {
+            var self = this;
+            self.clientID = ko.observable("andrew");
+            self.clOrdID = ko.observable();
+            self.orderId = ko.observable();
+            self.price = ko.observable();
+            self.side = ko.observable();
+            self.orderQty = ko.observable();
+            self.ordType = ko.observable("Limit");
+            self.cumQty = ko.observable();
+            self.transactTime = ko.observable();
+            self.lastPx = ko.observable();
+            self.lastQty = ko.observable();
+            self.symbol = ko.observable("BTCUSD");
+        };
+
+        var Tick = function() {
+            var self = this;
+            self.symbol = ko.observable();
+            self.price = ko.observable();
+            self.change = ko.observable();
+        };
+
+        var ViewModel = function() {
+            var self = this;
+            self.order = new OrderViewModel();
+
+            self.executions = ko.observableArray();
+            self.ticks = new ko.observableArray();
+
+            self.sides = ["Buy","Sell"];
+            self.orderTypes = ["Market","Limit"]
+            self.isPriceEnabled = ko.computed(function() {
+                return self.order.ordType() == "Limit";
+
+            })
+
+            self.NewOrder = () => {
+                self.order.clOrdID(guid());
+                self.order.orderId(guid());
+                $.ajax({
+                    type: "PUT",
+                    data : ko.toJSON(self.order),
+                    url: "http://localhost:61186/api/order/" + self.order.orderId(),
+                    contentType: "application/json"
+                }).then(result => {
+                    for (var i = 0, len = result.length; i < len; i++) {
+                        var execution = ko.mapping.fromJS(result[i]);
+                        self.executions.push(execution);
+                    }
+
+
+                });
+            }
+
+            self.CancelOrder = id => {
+                $.ajax({
+                    type: "DELETE",
+                    url: "http://localhost:61186/api/order/" + id,
+                    contentType: "application/json"
+                });
+            }
+        };
+        var viewModel = new ViewModel();
+        ko.applyBindings(viewModel);
+
+
+        var logger = new signalR.ConsoleLogger(signalR.LogLevel.Information);
+        var hubConnection = new signalR.HubConnection('http://localhost:53809/trade', { transport: signalR.TransportType.WebSockets, logger: logger });
+        hubConnection.on('tick', data => {
+
+            var existingIndex = viewModel.ticks().findIndex(x => x.symbol() == data.symbol);
+            if(existingIndex >= 0)
+            {
+                var existing = viewModel.ticks()[existingIndex];
+                ko.mapping.fromJS(data, existing);
+            }
+            else
+            {
+                var newTicker = ko.mapping.fromJS(data);
+                viewModel.ticks.push(newTicker);
+            }
+        });
+        hubConnection.start();
+
+        function guid() {
+            function s4() {
+                return Math.floor((1 + Math.random()) * 0x10000)
+                    .toString(16)
+                    .substring(1);
+            }
+
+            return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+                s4() + '-' + s4() + s4() + s4();
+        }
+
+
+    });
+</script>
+<p>Client ID: <input data-bind="value: order.clientID" /></p>
+<p>Qty: <input data-bind="value: order.orderQty" /></p>
+<p>Price: <input data-bind="value: order.price, enable: isPriceEnabled" /></p>
+<p>Side: <select data-bind="options: sides, value: order.side"></select></p>
+<p>Type: <select data-bind="options: orderTypes, value: order.ordType"></select></p>
+
+<button data-bind="click: NewOrder">Place Order</button>
+<br>
+<table border="1" width="50%">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Symbol</th>
+            <th>Type</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>LastPx</th>
+            <th>LastQty</th>
+            <th>CumQty</th>
+            <th>Side</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody data-bind="foreach: executions">
+        <tr>
+            <td data-bind="text: orderId"></td>
+            <td data-bind="text: symbol"></td>
+            <td data-bind="text: ordType"></td>
+            <td data-bind="text: orderQty"></td>
+            <td data-bind="text: price"></td>
+            <td data-bind="text: lastPx"></td>
+            <td data-bind="text: lastQty"></td>
+            <td data-bind="text: cumQty"></td>
+            <td data-bind="text: side"></td>
+            <td data-bind="text: ordStatus"></td>
+        </tr>
+    </tbody>
+</table>
+<table border="1" width="50%">
+    <thead>
+    <tr>
+        <th>Symbol</th>
+        <th>Price</th>
+        <th>Change</th>
+    </tr>
+    </thead>
+    <tbody data-bind="foreach: ticks">
+    <tr>
+        <td data-bind="text: symbol"></td>
+        <td data-bind="text: price"></td>
+        <td data-bind="text: change"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
