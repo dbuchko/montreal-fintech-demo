@@ -3,7 +3,7 @@ package io.pivotal.om.domain;
 public class ClientOrderResponse extends ClientOrderRequest {
 
 	private long orderId;
-	private String execID;
+	private String execId;
 	private int cumQty;
 	private String ordStatus;
 	private double lastPx;
@@ -22,12 +22,12 @@ public class ClientOrderResponse extends ClientOrderRequest {
 		this.orderId = orderId;
 	}
 
-	public String getExecID() {
-		return execID;
+	public String getExecId() {
+		return execId;
 	}
 
-	public void setExecID(String execID) {
-		this.execID = execID;
+	public void setExecId(String execId) {
+		this.execId = execId;
 	}
 
 	public int getCumQty() {

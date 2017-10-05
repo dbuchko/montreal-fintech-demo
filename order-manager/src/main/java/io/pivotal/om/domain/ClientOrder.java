@@ -18,7 +18,7 @@ public class ClientOrder {
 	private String side;
 	private int orderQty;
 	private String ordType;
-	private String execID;
+	private String execId;
 	private int cumQty;
 	private String ordStatus;
 	private int lastPx;
@@ -29,7 +29,7 @@ public class ClientOrder {
 	}
 	
 	public ClientOrder(long orderId, String clientId, String clOrdId, int price, String side, int orderQty, String ordType,
-			String execID, int cumQty, String ordStatus, int lastPx, int lastQty) {
+			String execId, int cumQty, String ordStatus, int lastPx, int lastQty) {
 		super();
 		this.orderId = orderId;
 		this.clientId = clientId;
@@ -38,7 +38,7 @@ public class ClientOrder {
 		this.side = side;
 		this.orderQty = orderQty;
 		this.ordType = ordType;
-		this.execID = execID;
+		this.execId = execId;
 		this.cumQty = cumQty;
 		this.ordStatus = ordStatus;
 		this.lastPx = lastPx;
@@ -101,12 +101,12 @@ public class ClientOrder {
 		this.ordType = ordType;
 	}
 	
-	public String getExecID() {
-		return execID;
+	public String getExecId() {
+		return execId;
 	}
 
-	public void setExecID(String execID) {
-		this.execID = execID;
+	public void setExecId(String execId) {
+		this.execId = execId;
 	}
 
 	public int getCumQty() {

@@ -1,5 +1,8 @@
 package io.pivotal.om.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +12,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,9 +21,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import io.pivotal.om.domain.ClientOrder;
-import io.pivotal.om.domain.ExchangeOrderResponse;
-import io.pivotal.om.domain.ClientOrderResponse;
 import io.pivotal.om.domain.ClientOrderRequest;
+import io.pivotal.om.domain.ClientOrderResponse;
+import io.pivotal.om.domain.ExchangeOrderResponse;
 import io.pivotal.om.repository.OrderRepository;
 
 @RestController
@@ -38,32 +42,58 @@ public class UIServices {
 	}
 	
 	@RequestMapping(value="api/order/{id}", method=RequestMethod.GET)
-	public ClientOrderResponse getOrder(ClientOrderRequest clientOrderRequest) {
+	public ClientOrderResponse getOrder(@PathVariable Long id, ClientOrderRequest clientOrderRequest) {
+
+		ClientOrder clientOrder = or.findOne(id);
 		
-		// Reply fields
-		String execID = "";
-		long orderId = 0L;
-		int cumQty = 0;
-		String ordStatus = "";
-		double lastPx = 0.0;
-		int lastQty = 0;
 		ClientOrderResponse reply = new ClientOrderResponse();
 		
 		// Copied from request
-		reply.setClientId(clientOrderRequest.getClientId());
-		reply.setClOrdId(clientOrderRequest.getClOrdId());
-		reply.setPrice(clientOrderRequest.getPrice());
-		reply.setSide(clientOrderRequest.getSide());
-		reply.setOrderQty(clientOrderRequest.getOrderQty());
-		reply.setOrdType(clientOrderRequest.getOrdType());
+		reply.setClientId(String.valueOf(clientOrder.getClientId()));
+		reply.setClOrdId(clientOrder.getClOrdId());
+		reply.setPrice(clientOrder.getPrice());
+		reply.setSide(clientOrder.getSide());
+		reply.setOrderQty(clientOrder.getOrderQty());
+		reply.setOrdType(clientOrder.getOrdType());
 		
-		reply.setExecID(execID);
-		reply.setOrderId(orderId);
-		reply.setCumQty(cumQty);
-		reply.setOrdStatus(ordStatus);
-		reply.setLastPx(lastPx);
-		reply.setLastQty(lastQty);
+		reply.setExecId(clientOrder.getExecId());
+		reply.setOrderId(clientOrder.getOrderId());
+		reply.setCumQty(clientOrder.getCumQty());
+		reply.setOrdStatus(clientOrder.getOrdStatus());
+		reply.setLastPx(clientOrder.getLastPx());
+		reply.setLastQty(clientOrder.getLastQty());
 		return reply;
+		
+	}
+	
+	@RequestMapping(value="api/orders", method=RequestMethod.GET)
+	public List<ClientOrderResponse> getOrders(ClientOrderRequest clientOrderRequest) {
+
+		List<ClientOrder> clientOrders = or.findAll();
+		List<ClientOrderResponse> clientOrderResponse = new ArrayList<ClientOrderResponse>();
+		
+		for (ClientOrder clientOrder : clientOrders) {
+
+			ClientOrderResponse reply = new ClientOrderResponse();
+
+			// Copied from request
+			reply.setClientId(String.valueOf(clientOrder.getClientId()));
+			reply.setClOrdId(clientOrder.getClOrdId());
+			reply.setPrice(clientOrder.getPrice());
+			reply.setSide(clientOrder.getSide());
+			reply.setOrderQty(clientOrder.getOrderQty());
+			reply.setOrdType(clientOrder.getOrdType());
+			reply.setExecId(clientOrder.getExecId());
+			reply.setOrderId(clientOrder.getOrderId());
+			reply.setCumQty(clientOrder.getCumQty());
+			reply.setOrdStatus(clientOrder.getOrdStatus());
+			reply.setLastPx(clientOrder.getLastPx());
+			reply.setLastQty(clientOrder.getLastQty());
+			
+			clientOrderResponse.add(reply);
+		}
+		
+		return clientOrderResponse;
 		
 	}
 	
