@@ -16,6 +16,7 @@
 
     <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>-->
     <link rel="stylesheet" href="css/foundation.css"/>
+    <link rel="stylesheet" href="css/app.css"/>
 </head>
 <body style>
 <script>
@@ -120,6 +121,15 @@
         }
 
 
+    });
+
+    //Conditional formatting for negative tick change values
+    $(document).ready(function(){
+        $('.change_column_element').each(function() {
+        if (parseInt($(this).text()) < 0) {
+            $(this).addClass('negative-value');
+        }
+        });
     });
 </script>
 
@@ -245,7 +255,7 @@
     <tr>
         <td data-bind="text: symbol"></td>
         <td data-bind="text: price"></td>
-        <td data-bind="text: change" class="change_row"></td>
+        <td data-bind="text: change" class="change_column_element"></td>
     </tr>
     </tbody>
 </table>
