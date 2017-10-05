@@ -135,6 +135,8 @@
 <form>
     <fieldset>
     <legend>Client Info</legend>
+    <table>
+    <tr>
     <div class="row">
             <div class="large-6 columns">
                 <div class="row collapse prefix-radius">
@@ -157,6 +159,8 @@
         </div>
         </div>
     </div>
+    </tr>
+    <tr>
     <div class="row">
             <div class="large-6 columns">
                 <div class="row collapse prefix-radius">
@@ -179,6 +183,8 @@
         </div>
         </div>
     </div>
+    </tr>
+    <tr>
     <div class="row">
             <div class="large-6 columns">
                 <div class="row collapse prefix-radius">
@@ -190,6 +196,8 @@
         </div>
         </div>
     </div>
+    </tr>
+    </table>
     <button data-bind="click: NewOrder">Place Order</button>
     </fieldset>
 </form>
@@ -237,7 +245,7 @@
     <tr>
         <td data-bind="text: symbol"></td>
         <td data-bind="text: price"></td>
-        <td data-bind="text: change"></td>
+        <td data-bind="text: change" class="change_row"></td>
     </tr>
     </tbody>
 </table>
