@@ -15,8 +15,10 @@
     <script type='text/javascript' src="ko.observableDictionary.js"></script>
 
     <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>-->
+    <link rel="stylesheet" href="css/foundation.css"/>
+    <link rel="stylesheet" href="css/app.css"/>
 </head>
-<body>
+<body style>
 <script>
     $(() => {
 
@@ -120,14 +122,95 @@
 
 
     });
-</script>
-<p>Client ID: <input data-bind="value: order.clientID" /></p>
-<p>Qty: <input data-bind="value: order.orderQty" /></p>
-<p>Price: <input data-bind="value: order.price, enable: isPriceEnabled" /></p>
-<p>Side: <select data-bind="options: sides, value: order.side"></select></p>
-<p>Type: <select data-bind="options: orderTypes, value: order.ordType"></select></p>
 
-<button data-bind="click: NewOrder">Place Order</button>
+    //Conditional formatting for negative tick change values
+    $(document).ready(function(){
+        $('.change_column_element').each(function() {
+        if (parseInt($(this).text()) < 0) {
+            $(this).addClass('negative_value');
+        }
+        });
+    });
+</script>
+
+<nav class="top-bar">
+    <ul class="title-area">
+        <li class="name">
+            <h1>
+                <a>Pivotal CF</a>
+            </h1>
+        </li>
+    </ul>
+</nav>
+<form>
+    <fieldset>
+    <legend>Client Info</legend>
+    <table>
+    <tr>
+    <div class="row">
+            <div class="large-6 columns">
+                <div class="row collapse prefix-radius">
+                <div class="small-3 columns">
+            <span class="prefix">Client ID:</span>
+            </div>
+        <div class="small-9 columns">
+            <input data-bind="value: order.clientID" class="data-bind"/>
+        </div>
+        </div>
+    </div>
+    <div class="row">
+            <div class="large-6 columns">
+                <div class="row collapse prefix-radius">
+                <div class="small-3 columns">
+            <span class="prefix">Qty:</span>
+            </div>
+        <div class="small-9 columns">
+            <input data-bind="value: order.orderQty" class="data-bind"/>
+        </div>
+        </div>
+    </div>
+    </tr>
+    <tr>
+    <div class="row">
+            <div class="large-6 columns">
+                <div class="row collapse prefix-radius">
+                <div class="small-3 columns">
+            <span class="prefix">Price:</span>
+            </div>
+        <div class="small-9 columns">
+            <input data-bind="value: order.price, enable: isPriceEnabled" class="data-bind"/>
+        </div>
+        </div>
+    </div>
+    <div class="row">
+            <div class="large-6 columns">
+                <div class="row collapse prefix-radius">
+                <div class="small-3 columns">
+            <span class="prefix">Side:</span>
+            </div>
+        <div class="small-9 columns">
+            <select data-bind="options: sides, value: order.side"></select>
+        </div>
+        </div>
+    </div>
+    </tr>
+    <tr>
+    <div class="row">
+            <div class="large-6 columns">
+                <div class="row collapse prefix-radius">
+                <div class="small-3 columns">
+            <span class="prefix">Type:</span>
+            </div>
+        <div class="small-9 columns">
+            <select data-bind="options: orderTypes, value: order.ordType"></select>
+        </div>
+        </div>
+    </div>
+    </tr>
+    </table>
+    <button data-bind="click: NewOrder">Place Order</button>
+    </fieldset>
+</form>
 <br>
 <table border="1" width="50%">
     <thead>
@@ -172,7 +255,7 @@
     <tr>
         <td data-bind="text: symbol"></td>
         <td data-bind="text: price"></td>
-        <td data-bind="text: change"></td>
+        <td data-bind="text: change" class="change_column_element"></td>
     </tr>
     </tbody>
 </table>
