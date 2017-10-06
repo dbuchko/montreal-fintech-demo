@@ -6,6 +6,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -38,13 +40,13 @@ public class UIServices {
 	
 	private OrderRepository or;
 	private RestTemplate restTemplate;
-	private EurekaClient eurekaClient;
+	private DiscoveryClient discoveryClient;
 	
 	@Autowired
-	public UIServices(OrderRepository or, RestTemplate restTemplate, EurekaClient eurekaClient) {
+	public UIServices(OrderRepository or, RestTemplate restTemplate, DiscoveryClient discoveryClient) {
 		this.or = or;
 		this.restTemplate = restTemplate;
-		this.eurekaClient = eurekaClient;
+		this.discoveryClient = discoveryClient;
 	}
 	
 	@RequestMapping(value="api/order/{id}", method=RequestMethod.GET)
@@ -105,16 +107,15 @@ public class UIServices {
 	
 	
 	@RequestMapping(value="/api/exchanges", method=RequestMethod.GET)
-	private List<String> getExchanges() {
+	public List<String> getExchanges() {
 		
-		List<Application> exchanges = eurekaClient.getApplications().getRegisteredApplications();
-		List<String> names = new ArrayList<String>();
-		
-		for (Application exchange : exchanges) {
-			names.add(exchange.getName());
+		List<String> services = discoveryClient.getServices();
+		List<String> exchanges = new ArrayList<String>();
+		for (String service : services) {
+			if(service.toUpperCase().startsWith("EXCHANGE_"))
+				exchanges.add(service.substring("EXCHANGE_".length()).trim().toUpperCase());
 		}
-		
-		return names;
+		return exchanges;
 	}	
 
 	
@@ -129,7 +130,7 @@ public class UIServices {
 		long orderId = newOrder.getOrderId();
 		logger.debug("Created new order with ID=" + orderId);
 		
-		String url = lookupUrlFor("EXCHANGE") + "/api/order/" + String.valueOf(orderId);
+		String url = lookupUrlForExchange(clientOrderRequest.getSymbol()) + "/api/order/" + String.valueOf(orderId);
 		logger.debug("Exchange service URL=" + url);
 		
 	    HttpHeaders headers = new HttpHeaders();
@@ -150,13 +151,14 @@ public class UIServices {
 		newOrder.setOrdRejReason(eor[0].getOrdRejReason());
 		or.save(newOrder);
 		or.flush();
-		
+
 		return newOrder;
 	}
 
-	  private String lookupUrlFor(String appName) {
-		    InstanceInfo instanceInfo = eurekaClient.getNextServerFromEureka(appName, false);
-		    return instanceInfo.getHomePageUrl();
-		  }
+	  private String lookupUrlForExchange(String symbol) {
+		  List<ServiceInstance> serviceInstances = discoveryClient.getInstances("Exchange_" + symbol);
+		  String url = serviceInstances.get(0).getUri().toString();
+		  return url;
+	  }
 		
 }

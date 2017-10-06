@@ -67,7 +67,7 @@
                 $.ajax({
                     type: "PUT",
                     data : ko.toJSON(self.order),
-                    url: "http://localhost:61186/api/order/" + self.order.orderId(),
+                    url: "http://exchange.apps.pcf.guru/api/order/" + self.order.orderId(),
                     contentType: "application/json"
                 }).then(result => {
                     for (var i = 0, len = result.length; i < len; i++) {
@@ -92,7 +92,7 @@
 
 
         var logger = new signalR.ConsoleLogger(signalR.LogLevel.Information);
-        var hubConnection = new signalR.HubConnection('http://localhost:53809/trade', { transport: signalR.TransportType.WebSockets, logger: logger });
+        var hubConnection = new signalR.HubConnection('http://mds.apps.pcf.guru/trade', { transport: signalR.TransportType.WebSockets, logger: logger });
         hubConnection.on('tick', data => {
 
             var existingIndex = viewModel.ticks().findIndex(x => x.symbol() == data.symbol);

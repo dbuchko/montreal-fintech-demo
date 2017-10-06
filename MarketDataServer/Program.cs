@@ -7,6 +7,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Steeltoe.Extensions.Configuration;
 
 namespace MarketDataServer
 {
@@ -19,6 +20,7 @@ namespace MarketDataServer
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+            .ConfigureAppConfiguration(cfg => cfg.AddCloudFoundry())
                 .UseStartup<Startup>()
                 .Build();
     }
