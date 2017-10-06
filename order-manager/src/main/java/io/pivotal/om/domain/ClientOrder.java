@@ -14,6 +14,7 @@ public class ClientOrder {
 	
 	private String clientId;
 	private String clOrdId;
+	private String symbol;
 	private int price;
 	private String side;
 	private int orderQty;
@@ -21,6 +22,7 @@ public class ClientOrder {
 	private String execId;
 	private int cumQty;
 	private String ordStatus;
+	private String ordRejReason;
 	private int lastPx;
 	private int lastQty;
 
@@ -28,12 +30,13 @@ public class ClientOrder {
 		super();
 	}
 	
-	public ClientOrder(long orderId, String clientId, String clOrdId, int price, String side, int orderQty, String ordType,
-			String execId, int cumQty, String ordStatus, int lastPx, int lastQty) {
+	public ClientOrder(long orderId, String clientId, String clOrdId, String symbol, int price, String side, int orderQty, String ordType,
+			String execId, int cumQty, String ordStatus, String ordRejReason, int lastPx, int lastQty) {
 		super();
 		this.orderId = orderId;
 		this.clientId = clientId;
 		this.clOrdId = clOrdId;
+		this.symbol = symbol;
 		this.price = price;
 		this.side = side;
 		this.orderQty = orderQty;
@@ -41,6 +44,7 @@ public class ClientOrder {
 		this.execId = execId;
 		this.cumQty = cumQty;
 		this.ordStatus = ordStatus;
+		this.ordRejReason = ordRejReason;
 		this.lastPx = lastPx;
 		this.lastQty = lastQty;
 	}
@@ -67,6 +71,14 @@ public class ClientOrder {
 
 	public void setClOrdId(String clOrdId) {
 		this.clOrdId = clOrdId;
+	}
+
+	public String getSymbol() {
+		return symbol;
+	}
+
+	public void setSymbol(String symbol) {
+		this.symbol = symbol;
 	}
 
 	public int getPrice() {
@@ -123,6 +135,14 @@ public class ClientOrder {
 
 	public void setOrdStatus(String ordStatus) {
 		this.ordStatus = ordStatus;
+	}
+
+	public String getOrdRejReason() {
+		return ordRejReason;
+	}
+
+	public void setOrdRejReason(String ordRejReason) {
+		this.ordRejReason = ordRejReason;
 	}
 
 	public int getLastPx() {

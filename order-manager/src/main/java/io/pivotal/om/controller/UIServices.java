@@ -17,8 +17,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+
+import com.netflix.appinfo.InstanceInfo;
+import com.netflix.discovery.EurekaClient;
+import com.netflix.discovery.shared.Application;
 
 import io.pivotal.om.domain.ClientOrder;
 import io.pivotal.om.domain.ClientOrderRequest;
@@ -32,13 +37,14 @@ public class UIServices {
 	Logger logger = LoggerFactory.getLogger(UIServices.class);
 	
 	private OrderRepository or;
-	
 	private RestTemplate restTemplate;
+	private EurekaClient eurekaClient;
 	
 	@Autowired
-	public UIServices(OrderRepository or, RestTemplate restTemplate) {
+	public UIServices(OrderRepository or, RestTemplate restTemplate, EurekaClient eurekaClient) {
 		this.or = or;
 		this.restTemplate = restTemplate;
+		this.eurekaClient = eurekaClient;
 	}
 	
 	@RequestMapping(value="api/order/{id}", method=RequestMethod.GET)
@@ -97,17 +103,35 @@ public class UIServices {
 		
 	}
 	
+	
+	@RequestMapping(value="/api/exchanges", method=RequestMethod.GET)
+	private List<String> getExchanges() {
+		
+		List<Application> exchanges = eurekaClient.getApplications().getRegisteredApplications();
+		List<String> names = new ArrayList<String>();
+		
+		for (Application exchange : exchanges) {
+			names.add(exchange.getName());
+		}
+		
+		return names;
+	}	
+
+	
 	@PostMapping(value="api/order")
 	@Transactional
-	public void placeOrder(@RequestBody ClientOrderRequest clientOrderRequest) {
+	@ResponseBody
+	public ClientOrder placeOrder(@RequestBody ClientOrderRequest clientOrderRequest) {
 		
 		ClientOrder clientOrder = new ClientOrder();
 		ClientOrder newOrder = or.save(clientOrder);
 		or.flush();
 		long orderId = newOrder.getOrderId();
-		
 		logger.debug("Created new order with ID=" + orderId);
-		String url = "http://exchange.apps.pcf.guru/api/order/" + orderId;
+		
+		String url = lookupUrlFor("EXCHANGE") + "/api/order/" + String.valueOf(orderId);
+		logger.debug("Exchange service URL=" + url);
+		
 	    HttpHeaders headers = new HttpHeaders();
 	    headers.setContentType(MediaType.APPLICATION_JSON);
 		HttpEntity<ClientOrderRequest> httpOrderRequest = new HttpEntity<>(clientOrderRequest, headers);
@@ -117,14 +141,22 @@ public class UIServices {
 		
 		newOrder.setClientId(eor[0].getClientID());
 		newOrder.setClOrdId(eor[0].getClOrdID());
+		newOrder.setSymbol(eor[0].getSymbol());
 		newOrder.setPrice(eor[0].getPrice());
 		newOrder.setSide(eor[0].getSide());
 		newOrder.setOrderQty(eor[0].getOrderQty());
 		newOrder.setOrdType(eor[0].getOrdType());
+		newOrder.setOrdStatus(eor[0].getOrdStatus());
+		newOrder.setOrdRejReason(eor[0].getOrdRejReason());
 		or.save(newOrder);
 		or.flush();
 		
-		return;
+		return newOrder;
 	}
-	
+
+	  private String lookupUrlFor(String appName) {
+		    InstanceInfo instanceInfo = eurekaClient.getNextServerFromEureka(appName, false);
+		    return instanceInfo.getHomePageUrl();
+		  }
+		
 }
