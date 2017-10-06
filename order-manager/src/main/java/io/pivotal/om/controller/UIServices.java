@@ -6,8 +6,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -23,6 +21,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.netflix.appinfo.InstanceInfo;
+import com.netflix.discovery.EurekaClient;
+import com.netflix.discovery.shared.Application;
+
 import io.pivotal.om.domain.ClientOrder;
 import io.pivotal.om.domain.ClientOrderRequest;
 import io.pivotal.om.domain.ClientOrderResponse;
@@ -36,13 +38,13 @@ public class UIServices {
 	
 	private OrderRepository or;
 	private RestTemplate restTemplate;
-	private DiscoveryClient discoveryClient;
+	private EurekaClient eurekaClient;
 	
 	@Autowired
-	public UIServices(OrderRepository or, RestTemplate restTemplate, DiscoveryClient discoveryClient) {
+	public UIServices(OrderRepository or, RestTemplate restTemplate, EurekaClient eurekaClient) {
 		this.or = or;
 		this.restTemplate = restTemplate;
-		this.discoveryClient = discoveryClient;
+		this.eurekaClient = eurekaClient;
 	}
 	
 	@RequestMapping(value="api/order/{id}", method=RequestMethod.GET)
@@ -105,14 +107,11 @@ public class UIServices {
 	@RequestMapping(value="/api/exchanges", method=RequestMethod.GET)
 	private List<String> getExchanges() {
 		
-		if (discoveryClient==null)
-			logger.error("discoveryClient is NULL!!");
-		
-		List<String> exchanges = discoveryClient.getServices();
+		List<Application> exchanges = eurekaClient.getApplications().getRegisteredApplications();
 		List<String> names = new ArrayList<String>();
 		
-		for (String exchange : exchanges) {
-			names.add(exchange);
+		for (Application exchange : exchanges) {
+			names.add(exchange.getName());
 		}
 		
 		return names;
@@ -128,9 +127,11 @@ public class UIServices {
 		ClientOrder newOrder = or.save(clientOrder);
 		or.flush();
 		long orderId = newOrder.getOrderId();
-		
 		logger.debug("Created new order with ID=" + orderId);
-		String url = "http://exchange.apps.pcf.guru/api/order/" + orderId;
+		
+		String url = lookupUrlFor("EXCHANGE") + "/api/order/" + String.valueOf(orderId);
+		logger.debug("Exchange service URL=" + url);
+		
 	    HttpHeaders headers = new HttpHeaders();
 	    headers.setContentType(MediaType.APPLICATION_JSON);
 		HttpEntity<ClientOrderRequest> httpOrderRequest = new HttpEntity<>(clientOrderRequest, headers);
@@ -140,6 +141,7 @@ public class UIServices {
 		
 		newOrder.setClientId(eor[0].getClientID());
 		newOrder.setClOrdId(eor[0].getClOrdID());
+		newOrder.setSymbol(eor[0].getSymbol());
 		newOrder.setPrice(eor[0].getPrice());
 		newOrder.setSide(eor[0].getSide());
 		newOrder.setOrderQty(eor[0].getOrderQty());
@@ -152,4 +154,9 @@ public class UIServices {
 		return newOrder;
 	}
 
+	  private String lookupUrlFor(String appName) {
+		    InstanceInfo instanceInfo = eurekaClient.getNextServerFromEureka(appName, false);
+		    return instanceInfo.getHomePageUrl();
+		  }
+		
 }

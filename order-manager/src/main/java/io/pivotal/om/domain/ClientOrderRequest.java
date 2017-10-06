@@ -5,6 +5,7 @@ public class ClientOrderRequest {
 	private long orderId;
 	private String clientId;
 	private String clOrdId;
+	private String symbol;
 	private int price;
 	private String side;
 	private int orderQty;
@@ -20,6 +21,7 @@ public class ClientOrderRequest {
 		return "clientId=" + clientId +
 				", clOrdId=" + clOrdId +
 				", price=" + price +
+				", symbol=" + symbol +
 				", side=" + side +
 				", ordType=" + ordType;
 	}
@@ -38,12 +40,23 @@ public class ClientOrderRequest {
 	public void setClientId(String clientId) {
 		this.clientId = clientId;
 	}
+	
 	public String getClOrdId() {
 		return clOrdId;
 	}
+	
 	public void setClOrdId(String clOrdId) {
 		this.clOrdId = clOrdId;
 	}
+	
+	public String getSymbol() {
+		return symbol;
+	}
+
+	public void setSymbol(String symbol) {
+		this.symbol = symbol;
+	}
+
 	public int getPrice() {
 		return price;
 	}

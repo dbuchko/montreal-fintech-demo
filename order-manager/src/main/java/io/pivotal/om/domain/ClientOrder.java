@@ -14,6 +14,7 @@ public class ClientOrder {
 	
 	private String clientId;
 	private String clOrdId;
+	private String symbol;
 	private int price;
 	private String side;
 	private int orderQty;
@@ -29,12 +30,13 @@ public class ClientOrder {
 		super();
 	}
 	
-	public ClientOrder(long orderId, String clientId, String clOrdId, int price, String side, int orderQty, String ordType,
+	public ClientOrder(long orderId, String clientId, String clOrdId, String symbol, int price, String side, int orderQty, String ordType,
 			String execId, int cumQty, String ordStatus, String ordRejReason, int lastPx, int lastQty) {
 		super();
 		this.orderId = orderId;
 		this.clientId = clientId;
 		this.clOrdId = clOrdId;
+		this.symbol = symbol;
 		this.price = price;
 		this.side = side;
 		this.orderQty = orderQty;
@@ -69,6 +71,14 @@ public class ClientOrder {
 
 	public void setClOrdId(String clOrdId) {
 		this.clOrdId = clOrdId;
+	}
+
+	public String getSymbol() {
+		return symbol;
+	}
+
+	public void setSymbol(String symbol) {
+		this.symbol = symbol;
 	}
 
 	public int getPrice() {
