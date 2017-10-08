@@ -78,6 +78,7 @@ namespace Exchange
             serializer.Formatting = Formatting.Indented;
 //            serializer.NullValueHandling = NullValueHandling.Ignore;
 //            serializer.DefaultValueHandling = DefaultValueHandling.Ignore;
+            serializer.MissingMemberHandling = MissingMemberHandling.Ignore;
             serializer.Converters = new List<JsonConverter> {new StringEnumConverter()};
             return serializer;
 

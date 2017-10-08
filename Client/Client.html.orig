@@ -21,16 +21,13 @@
 <body style>
     <script>
         $(() => {
-            //var OMS_URL = "http://exchange.apps.pcf.guru";
-            var OMS_URL = "http://localhost:8080";
-//            var MDS_URL = "http://mds.apps.pcf.guru";
-            var MDS_URL = "http://localhost:53809";
+
 
 
             var OrderViewModel = function() {
                 var self = this;
-                self.clientId = ko.observable("andrew");
-                self.clOrdId = ko.observable();
+                self.clientID = ko.observable("andrew");
+                self.clOrdID = ko.observable();
                 self.orderId = ko.observable();
                 self.price = ko.observable();
                 self.side = ko.observable();
@@ -47,13 +44,7 @@
                 var self = this;
                 self.symbol = ko.observable();
                 self.price = ko.observable();
-                self.lastPrice = ko.observable();
-                self.volume = ko.observable();
-                self.change = ko.computed(() => self.price() - self.lastPrice());
-                self.changePercentage = ko.computed(() => self.change() * 100 / self.lastPrice())
-                self.cssclass = ko.computed(() => {
-                    return parseInt(this.price()) < 0 ? "negative_value" : "";
-                });
+                self.change = ko.observable();
             };
 
             var ViewModel = function() {
@@ -65,48 +56,52 @@
                 self.ticks = new ko.observableArray();
 
                 self.sides = ["Buy","Sell"];
-                self.symbols = ko.observableArray(); //["BTCUSD","CADUSD"];
                 self.orderTypes = ["Market","Limit"]
                 self.isPriceEnabled = ko.computed(function() {
                     return self.order.ordType() == "Limit";
 
                 })
 
+<<<<<<< HEAD
+            self.NewOrder = () => {
+                self.order.clOrdID(guid());
+                self.order.orderId(guid());
+                $.ajax({
+                    type: "PUT",
+                    data : ko.toJSON(self.order),
+                    url: "http://exchange.apps.pcf.guru/api/order/" + self.order.orderId(),
+                    contentType: "application/json"
+                }).then(result => {
+                    for (var i = 0, len = result.length; i < len; i++) {
+                        var execution = ko.mapping.fromJS(result[i]);
+                        self.executions.push(execution);
+                    }
+=======
                 self.NewOrder = () => {
-                    self.order.clOrdId(guid());
-                    //self.order.orderId(guid());
+                    self.order.clOrdID(guid());
+                    self.order.orderId(guid());
                     $.ajax({
-                        type: "POST",
+                        type: "PUT",
                         data : ko.toJSON(self.order),
-                        url: OMS_URL + "/api/order",
+                        url: "http://exchange.apps.pcf.guru/api/order/" + self.order.orderId(),
                         contentType: "application/json"
                     }).then(result => {
                         self.GetOrders();   
                     });
                 }
-                self.GetExchanges = () => {
-                    $.ajax({
-                        type: "GET",
-                        url: OMS_URL + "/api/exchanges" ,
-                        contentType: "application/json"
-                    }).then(result => {
-                        self.symbols.removeAll();
-                        for(var i=0;i<result.length;i++)
-                        {
-                            self.symbols.push(result[i]);
-                        }
+>>>>>>> 8f64f88037129f72158b50b99328fbea7d09de10
 
-                    });
-                }
                 self.GetOrders = () => {
                     $.ajax({
                         type: "GET",
-                        url: OMS_URL + "/api/client/" + self.order.clientId() + "/orders" ,
+                        url: "http://exchange.apps.pcf.guru/api/order",
                         contentType: "application/json"
                     }).then(result => {
                         self.openOrders.removeAll();
                         self.completedOrders.removeAll();
                         for (var i = 0, len = result.length; i < len; i++) {
+                            console.log("result.length: " + result.length)
+                            console.log(result[i]);
                             var execution = ko.mapping.fromJS(result[i]);
                             if (execution.ordStatus() === "Filled"
                                 || execution.ordStatus() === "Cancelled") {
@@ -121,7 +116,7 @@
                 self.CancelOrder = id => {
                     $.ajax({
                         type: "DELETE",
-                        url: OMS_URL + "/api/client/" + self.order.clientId() + "/order/" + id,
+                        url: "http://exchange.apps.pcf.guru/api/order/" + id,
                         contentType: "application/json"
                     }).then(result => {
                         self.GetOrders();
@@ -132,30 +127,30 @@
 
             ko.applyBindings(viewModel);
             viewModel.GetOrders();
-            viewModel.GetExchanges();
 
             var logger = new signalR.ConsoleLogger(signalR.LogLevel.Information);
-            var hubConnection = new signalR.HubConnection(MDS_URL + '/trade', { transport: signalR.TransportType.WebSockets, logger: logger });
+            var hubConnection = new signalR.HubConnection('http://mds.apps.pcf.guru/trade', { transport: signalR.TransportType.WebSockets, logger: logger });
             hubConnection.on('tick', data => {
 
+<<<<<<< HEAD
+        var logger = new signalR.ConsoleLogger(signalR.LogLevel.Information);
+        var hubConnection = new signalR.HubConnection('http://mds.apps.pcf.guru/trade', { transport: signalR.TransportType.WebSockets, logger: logger });
+        hubConnection.on('tick', data => {
+=======
                 var existingIndex = viewModel.ticks().findIndex(x => x.symbol() == data.symbol);
-                var tick;
                 if(existingIndex >= 0)
                 {
-                    tick = viewModel.ticks()[existingIndex];
+                    var existing = viewModel.ticks()[existingIndex];
+                    ko.mapping.fromJS(data, existing);
                 }
                 else
                 {
-                    tick = new Tick();
-                    viewModel.ticks.push(tick);
+                    var newTicker = ko.mapping.fromJS(data);
+                    viewModel.ticks.push(newTicker);
                 }
-                tick.symbol(data.symbol);
-                tick.volume(data.volume);
-                tick.lastPrice(data.lastPrice);
-                tick.price(data.price);
-
             });
             hubConnection.start();
+>>>>>>> 8f64f88037129f72158b50b99328fbea7d09de10
 
             function guid() {
                 function s4() {
@@ -200,7 +195,7 @@
                             <span class="prefix">Client ID:</span>
                         </div>
                         <div class="small-9 columns">
-                            <input class="data-bind" data-bind="value: order.clientId">
+                            <input class="data-bind" data-bind="value: order.clientID">
                         </div>
                     </div>
                 </div>
@@ -251,19 +246,6 @@
                         <div class="small-9 columns">
                             <select data-bind="options: orderTypes, value: order.ordType">
                             </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="large-6 columns">
-                        <div class="row collapse prefix-radius">
-                            <div class="small-3 columns">
-                                <span class="prefix">Symbol:</span>
-                            </div>
-                            <div class="small-9 columns">
-                                <select data-bind="options: symbols, value: order.symbol">
-                                </select>
-                            </div>
                         </div>
                     </div>
                 </div>

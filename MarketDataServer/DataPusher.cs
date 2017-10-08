@@ -18,21 +18,10 @@ namespace MarketDataServer
 {
     public class Tick
     {
-        public Tick()
-        {
-        }
-
-        public Tick(long price, long lastPrice)
-        {
-            if (lastPrice == 0)
-                Change = 0;
-            else
-                Change = (price - lastPrice) * 100 / lastPrice;
-        }
-
         public long Price { get; set; }
-        public long Change { get; set; }
+        public long LastPrice { get; set; }
         public string Symbol { get; set; }
+        public long Volume { get; set; }
     }
     public class DataPusher : IDisposable
     {
@@ -71,8 +60,9 @@ namespace MarketDataServer
                 .Scan(new Tick(), (tick, report) => new Tick
                 {
                     Price = report.LastPx,
-                    Change = tick.Price == 0 ? 0 : (report.LastPx - tick.Price) * 100 / tick.Price,
-                    Symbol = report.Symbol
+                    LastPrice= tick.Price,
+                    Symbol = report.Symbol,
+                    Volume = report.LastQty
                 })
                 .Do(tick => _hubContext.Clients.All.InvokeAsync("tick", tick))
                 .Subscribe();

@@ -23,7 +23,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "http://localhost:61186/"
+      "applicationUrl": "http://cartman:61186/"
     }
   }
 }

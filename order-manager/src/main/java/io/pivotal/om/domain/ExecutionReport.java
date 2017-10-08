@@ -1,7 +1,20 @@
 package io.pivotal.om.domain;
 
-public class ExchangeOrderResponse {
+import org.springframework.data.domain.Persistable;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Transient;
+
+@Entity
+public class ExecutionReport implements Persistable<String> {
+
+	public void setNew(boolean aNew) {
+		isNew = aNew;
+	}
+
+	@Transient
+	private boolean isNew;
 	private String execType;
 	private String execId;
 	private String tradeId;
@@ -12,7 +25,8 @@ public class ExchangeOrderResponse {
 	private String origClOrdID;
 	private String clientID;
 	private String massStatusReqID;
-	private long orderId;
+	@Id
+	private String orderId;
 	private long secondaryOrderId;
 	private String symbol;
 	private int price;
@@ -46,10 +60,57 @@ public class ExchangeOrderResponse {
 	private String cxlRejReason;
 	private boolean escrowRestricted;
 		
-	public ExchangeOrderResponse() {
+	public ExecutionReport() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
+
+	public ExecutionReport(String execType, String execId, String tradeId, String execRefID, int totalNumReports, String clOrdID, String ordStatusReqID, String origClOrdID, String clientID, String massStatusReqID, String orderId, long secondaryOrderId, String symbol, int price, int stopPx, int orderQty, String ordType, String side, String timeInForce, String pegScope, String pegPriceType, long pegOffset, long seqNum, String triggerPriceType, int lastPx, int lastQty, int cumQty, int avgPx, int leavesQty, String transactTime, long fee, int lastCommission, int cummCommission, String trdMatchID, String ordStatus, long origEscrow, long leavesEscrow, int peggedPrice, String lastLiquidityInd, String submitTime, String ordRejReason, String cxlRejReason, boolean escrowRestricted) {
+		this.execType = execType;
+		this.execId = execId;
+		this.tradeId = tradeId;
+		this.execRefID = execRefID;
+		this.totalNumReports = totalNumReports;
+		this.clOrdID = clOrdID;
+		this.ordStatusReqID = ordStatusReqID;
+		this.origClOrdID = origClOrdID;
+		this.clientID = clientID;
+		this.massStatusReqID = massStatusReqID;
+		this.orderId = orderId;
+		this.secondaryOrderId = secondaryOrderId;
+		this.symbol = symbol;
+		this.price = price;
+		this.stopPx = stopPx;
+		this.orderQty = orderQty;
+		this.ordType = ordType;
+		this.side = side;
+		this.timeInForce = timeInForce;
+		this.pegScope = pegScope;
+		this.pegPriceType = pegPriceType;
+		this.pegOffset = pegOffset;
+		this.seqNum = seqNum;
+		this.triggerPriceType = triggerPriceType;
+		this.lastPx = lastPx;
+		this.lastQty = lastQty;
+		this.cumQty = cumQty;
+		this.avgPx = avgPx;
+		this.leavesQty = leavesQty;
+		this.transactTime = transactTime;
+		this.fee = fee;
+		this.lastCommission = lastCommission;
+		this.cummCommission = cummCommission;
+		this.trdMatchID = trdMatchID;
+		this.ordStatus = ordStatus;
+		this.origEscrow = origEscrow;
+		this.leavesEscrow = leavesEscrow;
+		this.peggedPrice = peggedPrice;
+		this.lastLiquidityInd = lastLiquidityInd;
+		this.submitTime = submitTime;
+		this.ordRejReason = ordRejReason;
+		this.cxlRejReason = cxlRejReason;
+		this.escrowRestricted = escrowRestricted;
+	}
+
 	public String getExecType() {
 		return execType;
 	}
@@ -110,10 +171,10 @@ public class ExchangeOrderResponse {
 	public void setMassStatusReqID(String massStatusReqID) {
 		this.massStatusReqID = massStatusReqID;
 	}
-	public long getOrderId() {
+	public String getOrderId() {
 		return orderId;
 	}
-	public void setOrderId(long orderId) {
+	public void setOrderId(String orderId) {
 		this.orderId = orderId;
 	}
 	public long getSecondaryOrderId() {
@@ -308,5 +369,14 @@ public class ExchangeOrderResponse {
 	public void setEscrowRestricted(boolean escrowRestricted) {
 		this.escrowRestricted = escrowRestricted;
 	}
-	
+
+	@Override
+	public String getId() {
+		return orderId;
+	}
+
+	@Override
+	public boolean isNew() {
+		return isNew;
+	}
 }
