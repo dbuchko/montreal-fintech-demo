@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Almirex.Contracts.Fields;
@@ -50,9 +49,8 @@ namespace Exchange.Controllers
 
         // PUT api/values/5
         [HttpPut("{id}")]
-        public List<ExecutionReport> Put(string id, HttpRequestMessage test)
+        public List<ExecutionReport> Put(string id, [FromBody]ExecutionReport order)
         {
-            ExecutionReport order = null;
             var results = _orderbookService.OrderBook.WithReports(ob => ob.NewOrder(order.ToOrder()));
             ProcessExecutionReports(results);
             return results;

@@ -7,8 +7,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +21,8 @@ import io.pivotal.om.domain.ExecutionReport;
 import io.pivotal.om.repository.OrderRepository;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
+@Configuration
+@EnableAutoConfiguration
 public class UIServices {
 	
 	Logger logger = LoggerFactory.getLogger(UIServices.class);
@@ -25,7 +30,11 @@ public class UIServices {
 	private OrderRepository or;
 	private RestTemplate restTemplate;
 	private DiscoveryClient discoveryClient;
-	
+
+	@Value("${config.rate}")
+	int rate;
+
+
 	@Autowired
 	public UIServices(OrderRepository or, RestTemplate restTemplate, DiscoveryClient discoveryClient) {
 		this.or = or;
@@ -40,6 +49,7 @@ public class UIServices {
 		String url = lookupUrlForExchange(symbol) + "/api/order/" + String.valueOf(orderId);
 		ResponseEntity<ExecutionReport> re = restTemplate.exchange(url, HttpMethod.DELETE, null, ExecutionReport.class);
 		ExecutionReport eor = re.getBody();
+		or.save(eor);
 		return eor;
 	}
 
@@ -83,6 +93,7 @@ public class UIServices {
 
 		for(ExecutionReport er : eor)
 		{
+			er.setLastCommission(rate);
 			ordersToSave.put(er.getOrderId(), er);
 		}
 		ExecutionReport newOrderLastState = ordersToSave.get(orderId);

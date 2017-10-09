@@ -29,8 +29,8 @@
 
             var OrderViewModel = function() {
                 var self = this;
-                self.clientId = ko.observable("andrew");
-                self.clOrdId = ko.observable();
+                self.clientID = ko.observable("andrew");
+                self.clOrdID = ko.observable();
                 self.orderId = ko.observable();
                 self.price = ko.observable();
                 self.side = ko.observable();
@@ -73,7 +73,7 @@
                 })
 
                 self.NewOrder = () => {
-                    self.order.clOrdId(guid());
+                    self.order.clOrdID(guid());
                     //self.order.orderId(guid());
                     $.ajax({
                         type: "POST",
@@ -101,7 +101,7 @@
                 self.GetOrders = () => {
                     $.ajax({
                         type: "GET",
-                        url: OMS_URL + "/api/client/" + self.order.clientId() + "/orders" ,
+                        url: OMS_URL + "/api/client/" + self.order.clientID() + "/orders" ,
                         contentType: "application/json"
                     }).then(result => {
                         self.openOrders.removeAll();
@@ -109,7 +109,7 @@
                         for (var i = 0, len = result.length; i < len; i++) {
                             var execution = ko.mapping.fromJS(result[i]);
                             if (execution.ordStatus() === "Filled"
-                                || execution.ordStatus() === "Cancelled") {
+                                || execution.ordStatus() === "Canceled") {
                                 self.completedOrders.push(execution);
                             } else {
                                 self.openOrders.push(execution);
@@ -121,7 +121,7 @@
                 self.CancelOrder = id => {
                     $.ajax({
                         type: "DELETE",
-                        url: OMS_URL + "/api/client/" + self.order.clientId() + "/order/" + id,
+                        url: OMS_URL + "/api/client/" + self.order.clientID() + "/order/" + id,
                         contentType: "application/json"
                     }).then(result => {
                         self.GetOrders();
@@ -200,7 +200,7 @@
                             <span class="prefix">Client ID:</span>
                         </div>
                         <div class="small-9 columns">
-                            <input class="data-bind" data-bind="value: order.clientId">
+                            <input class="data-bind" data-bind="value: order.clientID">
                         </div>
                     </div>
                 </div>
@@ -295,6 +295,7 @@
                         <th>LastPx</th>
                         <th>LastQty</th>
                         <th>CumQty</th>
+                        <th>LastCommission</th>
                         <th>Side</th>
                         <th>Status</th>
                         <th>Action</th>
@@ -310,6 +311,7 @@
                         <td data-bind="text: lastPx"></td>
                         <td data-bind="text: lastQty"></td>
                         <td data-bind="text: cumQty"></td>
+                        <td data-bind="text: lastCommission"></td>
                         <td data-bind="text: side"></td>
                         <td data-bind="text: ordStatus"></td>
                         <td><button data-bind="click: $parent.CancelOrder.bind($data, $data.orderId())">Cancel</button></td>
@@ -329,6 +331,7 @@
                         <th>LastPx</th>
                         <th>LastQty</th>
                         <th>CumQty</th>
+                        <th>LastCommission</th>
                         <th>Side</th>
                         <th>Status</th>
                     </tr>
@@ -343,6 +346,7 @@
                         <td data-bind="text: lastPx"></td>
                         <td data-bind="text: lastQty"></td>
                         <td data-bind="text: cumQty"></td>
+                        <td data-bind="text: lastCommission"></td>
                         <td data-bind="text: side"></td>
                         <td data-bind="text: ordStatus"></td>
                     </tr>

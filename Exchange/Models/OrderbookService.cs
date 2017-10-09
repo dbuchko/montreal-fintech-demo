@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Almirex.Contracts.Fields;
+using Almirex.Contracts.Interfaces;
 using Almirex.OrderMatchingEngine;
 using Almirex.OrderMatchingEngine.Utils;
 using Exchange.Repository;
@@ -25,6 +26,7 @@ namespace Exchange.Models
                 var config = scope.ServiceProvider.GetRequiredService<IOptionsSnapshot<SpringConfig>>();
                 var symbol = config.Value.Application.Name.Replace("Exchange_", string.Empty);
                 OrderBook = new OrderBook(symbol);
+                OrderBook.FeeSchedule = scope.ServiceProvider.GetService<IFeeSchedule>();
                 OrderBook.TradeIdGenerator = () => Guid.NewGuid().ToString();
                 var db = scope.ServiceProvider.GetRequiredService<ExchangeContext>();
                 Recover(db);

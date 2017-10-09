@@ -1,5 +1,6 @@
 package io.pivotal.om.domain;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.domain.Persistable;
 
 import javax.persistence.Entity;
@@ -7,6 +8,7 @@ import javax.persistence.Id;
 import javax.persistence.Transient;
 
 @Entity
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ExecutionReport implements Persistable<String> {
 
 	public void setNew(boolean aNew) {

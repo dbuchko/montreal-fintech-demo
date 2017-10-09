@@ -18,3 +18,5 @@ logging:
     io:
       pivotal:
         om: DEBUG
+config:
+  rate: 1

@@ -20,7 +20,9 @@ namespace Exchange
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration(config => config.AddCloudFoundry())
+                .ConfigureAppConfiguration((hostingContext, config) => 
+                    config.AddCloudFoundry()
+                    .AddConfigServer(hostingContext.HostingEnvironment))
                 .UseStartup<Startup>()
                 .Build();
     }

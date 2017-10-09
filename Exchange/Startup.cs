@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Almirex.Contracts.Fields;
+using Almirex.Contracts.Interfaces;
 using Almirex.OrderMatchingEngine;
 using Almirex.OrderMatchingEngine.Utils;
 using Exchange.Models;
@@ -48,7 +49,6 @@ namespace Exchange
             services.AddMvc().AddJsonOptions(options => ConfigureSerializer(options.SerializerSettings));
             services.AddCors();
             services.AddDiscoveryClient(Configuration);
-            
             services.AddDbContext<ExchangeContext>(opt => opt.UseMySql(Configuration));
             services.AddSingleton<OrderbookService>();
             services.AddRabbitConnection(Configuration);
