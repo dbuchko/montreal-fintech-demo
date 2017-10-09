@@ -50,6 +50,7 @@ public class UIServices {
 		ResponseEntity<ExecutionReport> re = restTemplate.exchange(url, HttpMethod.DELETE, null, ExecutionReport.class);
 		ExecutionReport eor = re.getBody();
 		or.save(eor);
+		or.flush();
 		return eor;
 	}
 
