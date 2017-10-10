@@ -1,14 +1,12 @@
-= Creating a Spring Boot Application
+= Creating the Order Manager Application
 
-== Goal
+[Abstract]
 
-Create REST services for the client using Spring Boot and deploy them to Cloud Foundry.
+Create the Order Manager application to host the REST services for the client using Spring Boot. Deploy the application to Cloud Foundry.
 
-Approximate time: 30 minutes
+Demonstrate the use of manifests, scaling an application, fetching logs, inspecting Spring Boot Applications using actuator, and using Spring Cloud Registry.
 
-== Exercise
-
-=== Create a Spring Boot Starter Project
+== Create a Spring Boot Starter Project
 
 . Open Spring Tool Suite (STS), and select `File`->`New`->`Spring Starter Project`.  Enter the following values:
 
@@ -179,7 +177,7 @@ Save the file.  It should look like the file below.
 ----
 
 
-=== Test the build environment
+== Test the build environment
 
 . Open a command prompt window, and change to the `order-manager` directory.  Run your application using the following command:
 
@@ -205,7 +203,7 @@ Spring Boot applications by default listen on port 8080, so open your browser an
 . Shut down the application by hitting <ctrl-c>.
 
 
-=== Create the Domain Model
+== Create the Domain Model
 
 This class will be our primary object we will persist and expose to the UI through REST services.
 
@@ -612,7 +610,7 @@ The `Id` annotation indicates the field JPA should use as the primary key for th
 The `@Transient` annotation indicates a field that will not be persisted in the repository.
 
 
-=== Create the Repository
+== Create the Repository
 
 This class will be used by Spring JPA as our object repository.
 
@@ -646,7 +644,7 @@ Take note of the definition of the interface, that it extends the `JpaRepository
 +
 We then define the specific query to be executed for our `ordersByClient` method.
 
-=== Create the WebConfig class
+== Create the WebConfig class
 
 This class will be used to initialize the REST template and mappings to allow cross-domain services calls.
 
@@ -688,7 +686,7 @@ public class WebConfig  {
 }
 ----
 
-=== Create the UI REST services
+== Create the UI REST services
 
 This class will contain all the REST services that the UI client requires.  It will invoke a REST call on the exchange you created in the previous section, to execute the order.  For now, we will hard-code the list of available exchanges (in the `getExchanges()` method), as well as the endpoint of the exchange (in the `lookupUrlForExchange()` method).  Later we will use Spring Cloud Services Eureka service registry to do a dynamic lookup of these hardcoded values.
 
@@ -813,7 +811,7 @@ public class UIServices {
 +
 Notice the annotations on each method, they will reflect the endpoints that will be exposed as REST services for the UI.
 
-=== Update the Application Configuration
+== Update the Application Configuration
 
 . In the `src/main/resources` folder, rename the `application.properties` file to `application.yml`, and set the properties as below.
 
@@ -855,7 +853,7 @@ Save the file.  We are configuring our application to:
 - define the default exchange rate (which is for demonstration purposes only - this would normally not be stored as a configuration parameter).
 
 
-=== Build and run the project locally
+== Build and run the project locally
 
 . In a command prompt window, change the the root project directory (eg. order-manager), and build the project artifacts by entering:
 
@@ -931,9 +929,9 @@ Look for an HTTP response code of 200.  You should also receive a payload in the
 
 . Stop the application by pressing `ctrl-c`.
 
-=== Deploy the Order Manager application to PCF
+== Deploy the Order Manager application to PCF
 
-==== Create the PCF Services
+=== Create the PCF Services
 . From the command prompt, using the CF CLI, create a MySQL service instance in your space.  First, see what services are available for you to use.
 
 +
@@ -960,7 +958,7 @@ Verify it has been created. Also verify the eureka service still exists (from th
 cf services
 ----
 
-==== Create a PCF Manifest file
+=== Create a PCF Manifest file
 
 . Verify that the `order-manager-0.0.1-SNAPSHOT.jar` was created in the `target` directory.
 
@@ -999,7 +997,7 @@ services:
 - Bind the application to the `omdb` MySQL service instance.  This is the repository.
 
 
-==== Deploy the application
+=== Deploy the application
 
 NOTE: From the command prompt, make sure you are in the root `order-manager` project directory, the same directory the `manifest.yml` file is.
 
@@ -1015,7 +1013,7 @@ cf logs om --recent
 
 . From Postman, test the deployed app by changing the URL to point to the order-manager URL that was assigned to your application.  eg. `om-<your-initials>.apps.pcf.space/api/order`.  Verify that you get an HTTP response code of 200 again with the JSON payload.
 
-==== Scale the application
+=== Scale the application
 
 . Assume load has increased on the order manager application, and you need to scale the number of instances.  First, let's tail the logs in another terminal window (or tab):
 
@@ -1043,7 +1041,7 @@ cf scale om -i 2
 cf scale om -i 2
 ----
 
-=== Modify the application to use Spring Cloud Services Eureka Service Registry
+== Modify the application to use Spring Cloud Services Eureka Service Registry
 
 Now let's modify the code to remove those hard-coded values, and instead use the Service Registry to look up the available exchanges and their endpoints.
 

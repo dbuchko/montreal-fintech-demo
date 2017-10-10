@@ -1,17 +1,7 @@
-= Instructions
+= Creating an Exchange
 
-
-== Deploying GUI
-. Publish the code. 
-.. Right click on Client in Solution Explorer > Publish.
-.. Click publish button
-. Open command prompt into `publish\Client` folder as per previous step
-. Push to Cloud Foundry. Replace # with your student number
-+
-----
-> cf push client --hostname client#
-----
-. Visit the address as specified by the URL to ensure app properly started up
+[Abstract]
+This lab exercise will create a .NET exchange application to execute orders.
 
 == Modify Exchange for persistence
 
@@ -280,7 +270,7 @@ Modify `appsettings.json` to add local name of the app, and the URL of the eurek
 - Notice the instance name sub-section in eureka section. This is how the app will declare it's address when it registers itself with service discovery server. This value will be automatically overridden when running on Cloud Foundry.
 
 ==== Assign symbol name to OrderBook
-Right now our orderbook returns "DEFAULT" as symbol for all execution reports. Lets use the one assigned by the settings. 
+Right now our orderbook returns "DEFAULT" as symbol for all execution reports. Lets use the one assigned by the settings.
 
 . Edit Orderbook.cs
 . Modify OrderbookService constructor:
@@ -307,7 +297,7 @@ public OrderbookService(IServiceProvider serviceProvider)
 > cf create-service p-mysql 100mb mysql
 ----
 
-. Publish the code. 
+. Publish the code.
 .. Right click on Exchange in Solution Explorer > Publish.
 .. Click publish button
 . Open command prompt into `publish\Exchange` folder as per previous step
@@ -320,4 +310,3 @@ public OrderbookService(IServiceProvider serviceProvider)
 > cf start Exchange_CADUSD
 ----
 We can push multiple instances of the app with different name as the suffix. Because each app will register with Service Discovery, we can dynamically determine which symbols are available for trading just by monitoring the state of the service!
-
