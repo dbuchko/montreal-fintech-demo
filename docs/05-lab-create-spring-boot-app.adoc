@@ -2,7 +2,7 @@
 
 == Goal
 
-Create REST services using Spring Boot and deploy them to Cloud Foundry.
+Create REST services for the client using Spring Boot and deploy them to Cloud Foundry.
 
 Approximate time: 30 minutes
 
@@ -10,7 +10,7 @@ Approximate time: 30 minutes
 
 === Create a Spring Boot Starter Project
 
-. Open Spring Tool Suite (STS), and select `File`-->`New`-->`Spring Starter Project`.  Enter the following values:
+. Open Spring Tool Suite (STS), and select `File`->`New`->`Spring Starter Project`.  Enter the following values:
 
 +
 - Name: `order-manager`
@@ -48,15 +48,17 @@ Approximate time: 30 minutes
 
 +
 [source,xml]
+----
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-config</artifactId>
 				<version>1.3.3.RELEASE</version>
 				<type>pom</type>
 				<scope>import</scope>
-			</dependency>
-
-+ Save the file.  It should look like the file below.
+			/dependency>
+----
++
+Save the file.  It should look like the file below.
 
 +
 [source,xml]
@@ -67,11 +69,11 @@ Approximate time: 30 minutes
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>io.pivotal</groupId>
-	<artifactId>order-manager-start</artifactId>
+	<artifactId>order-manager</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>order-manager-start</name>
+	<name>order-manager</name>
 	<description>Demo project for Spring Boot</description>
 
 	<parent>
@@ -176,42 +178,32 @@ Approximate time: 30 minutes
 </project>
 ----
 
-=== Create the main application.
 
-. Open the `OrderManagerApplication.java` file, and add the following imports and annotations:
+=== Test the build environment
 
-+
-[source,java]
-----
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-
-@SpringBootApplication
-@EnableDiscoveryClient
-----
+. Open a command prompt window, and change to the `order-manager` directory.  Run your application using the following command:
 
 +
-The final application code should look as below:
+[source,bash]
+----
+mvn clean package -DskipTests spring-boot:run
+----
+
+. In the logged output from the application, look for the password to the application, and copy it to the clipboard.  It will look like (of course you'll have a different password):
 
 +
-[source,java]
+[source,bash]
 ----
-package io.pivotal.om;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-
-@SpringBootApplication
-@EnableDiscoveryClient
-public class OrderManagerApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(OrderManagerApplication.class, args);
-	}
-
-}
+Using default security password: 6717dcc5-ae63-4228-b1de-4b56674a4372
 ----
+
+. Because we included the Spring Boot Actuator dependency, we get a number of endpoints out-of-the box that we can use to inspect our application.  This is great for monitoring and debugging.
+
++
+Spring Boot applications by default listen on port 8080, so open your browser and enter `http://localhost:8080/mappings`. Username is `user`, password you can paste from your clipboard.  You should see a list of all out-of-the-box actuator endpoints. REST endpoints we create for our application will also appear here - you can take a look at them later on.
+
+. Shut down the application by hitting <ctrl-c>.
+
 
 === Create the Domain Model
 
@@ -610,6 +602,16 @@ public class ExecutionReport implements Persistable<String> {
 }
 ----
 
++
+Note the `@Entity` annotation. JPA looks for that annotation, and when found will map the object to a table in the repository we will use for persistence.
+
++
+The `Id` annotation indicates the field JPA should use as the primary key for the table.
+
++
+The `@Transient` annotation indicates a field that will not be persisted in the repository.
+
+
 === Create the Repository
 
 This class will be used by Spring JPA as our object repository.
@@ -638,9 +640,15 @@ public interface OrderRepository extends JpaRepository<ExecutionReport, String> 
 }
 ----
 
++
+Take note of the definition of the interface, that it extends the `JpaRepository`, using `ExecutionReport` as the object type to be stored, and indicating that the primary key will be a `String`.
+
++
+We then define the specific query to be executed for our `ordersByClient` method.
+
 === Create the WebConfig class
 
-This class will be used to initialize the REST repository.
+This class will be used to initialize the REST template and mappings to allow cross-domain services calls.
 
 . Create the `io.pivotal.om.config` package, and the `WebConfig` class.
 
@@ -682,11 +690,443 @@ public class WebConfig  {
 
 === Create the UI REST services
 
-This class will contain all the REST services that the UI client requires.
+This class will contain all the REST services that the UI client requires.  It will invoke a REST call on the exchange you created in the previous section, to execute the order.  For now, we will hard-code the list of available exchanges (in the `getExchanges()` method), as well as the endpoint of the exchange (in the `lookupUrlForExchange()` method).  Later we will use Spring Cloud Services Eureka service registry to do a dynamic lookup of these hardcoded values.
 
 . Create a new `io.pivotal.om.controller` package, and the UIServices class.
 
-. Open the UIServices class, and paste in the following code:
+. Open the UIServices class, and paste in the following code.
+
++
+NOTE: You *MUST* replace the URL defined in the `lookupUrlForExchange()` method with your own exchange *HTTP* (not *HTTPS*) URL that was assigned by Cloud Foundry when you deployed your exchange.  eg. `http://exchange-cadusd-antonomastical-fishhook.apps.pcf.space/`
+
++
+[source,java]
+----
+package io.pivotal.om.controller;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.*;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+
+import io.pivotal.om.domain.ExecutionReport;
+import io.pivotal.om.repository.OrderRepository;
+@CrossOrigin(origins = "*", maxAge = 3600)
+@RestController
+@Configuration
+@EnableAutoConfiguration
+public class UIServices {
+
+	Logger logger = LoggerFactory.getLogger(UIServices.class);
+
+	private OrderRepository or;
+	private RestTemplate restTemplate;
+
+	@Value("${config.rate}")
+	int rate;
+
+
+	@Autowired
+	public UIServices(OrderRepository or, RestTemplate restTemplate) {
+		this.or = or;
+		this.restTemplate = restTemplate;
+	}
+
+	@DeleteMapping(value="api/client/{clientId}/order/{orderId}")
+	public ExecutionReport deleteOrder(@PathVariable String clientId, @PathVariable String orderId) {
+		ExecutionReport order = or.findOne(orderId);
+		String symbol = order.getSymbol();
+		String url = lookupUrlForExchange(symbol) + "/api/order/" + String.valueOf(orderId);
+		ResponseEntity<ExecutionReport> re = restTemplate.exchange(url, HttpMethod.DELETE, null, ExecutionReport.class);
+		ExecutionReport eor = re.getBody();
+		or.save(eor);
+		return eor;
+	}
+
+	@RequestMapping(value="api/client/{clientId}/orders", method=RequestMethod.GET)
+	public List<ExecutionReport> getOrders(@PathVariable String clientId) {
+		List<ExecutionReport> clientOrders = or.ordersByClient(clientId);
+		return clientOrders;
+	}
+
+
+	@RequestMapping(value="/api/exchanges", method=RequestMethod.GET)
+	public List<String> getExchanges() {
+
+		List<String> exchanges = new ArrayList<String>();
+		exchanges.add("EXCHANGE_CADUSD");
+		return exchanges;
+	}
+
+
+	@PostMapping(value="api/order")
+	@Transactional
+	@ResponseBody
+	public ExecutionReport placeOrder(@RequestBody ExecutionReport clientOrderRequest) {
+		String orderId = java.util.UUID.randomUUID().toString();
+		clientOrderRequest.setOrderId(orderId);
+		logger.debug("Created new order with ID=" + orderId);
+		String url = lookupUrlForExchange(clientOrderRequest.getSymbol()) + "/api/order/" + String.valueOf(orderId);
+		logger.debug("Exchange service URL=" + url);
+
+	    HttpHeaders headers = new HttpHeaders();
+	    headers.setContentType(MediaType.APPLICATION_JSON);
+		HttpEntity<ExecutionReport> httpOrderRequest = new HttpEntity<>(clientOrderRequest, headers);
+		ResponseEntity<ExecutionReport[]> re = restTemplate.exchange(url, HttpMethod.PUT, httpOrderRequest, ExecutionReport[].class);
+
+		ExecutionReport[] eor = re.getBody();
+		HashMap<String,ExecutionReport> ordersToSave = new HashMap<>();
+
+		for(ExecutionReport er : eor)
+		{
+			er.setLastCommission(rate);
+			ordersToSave.put(er.getOrderId(), er);
+		}
+		ExecutionReport newOrderLastState = ordersToSave.get(orderId);
+		newOrderLastState.setNew(true);
+		ordersToSave.forEach((l, order) -> or.save(order));
+		or.flush();
+
+		return newOrderLastState;
+	}
+
+	  private String lookupUrlForExchange(String symbol) {
+		  String url = <your-CADUSD-exchange-HTTP-URI>;
+		  return url;
+	  }
+
+}
+----
+
++
+Notice the annotations on each method, they will reflect the endpoints that will be exposed as REST services for the UI.
+
+=== Update the Application Configuration
+
+. In the `src/main/resources` folder, rename the `application.properties` file to `application.yml`, and set the properties as below.
+
++
+[source,yaml]
+----
+spring:
+  application:
+    name: OrderManager
+  jpa:
+    generate-ddl: true
+    show-sql: true
+
+management:
+  security:
+    enabled: false
+
+security:
+  basic:
+    enabled: false
+
+logging:
+  level:
+    io:
+      pivotal:
+        om: DEBUG
+
+config:
+  rate: 1
+
+----
+
++
+Save the file.  We are configuring our application to:
+
+- generate the DDL for the entities we've defined
+- turn off default security (for simplification)
+- increase the logging level on all the classes we've written
+- define the default exchange rate (which is for demonstration purposes only - this would normally not be stored as a configuration parameter).
+
+
+=== Build and run the project locally
+
+. In a command prompt window, change the the root project directory (eg. order-manager), and build the project artifacts by entering:
+
++
+[source,bash]
+mvn clean package spring-boot:run -DskipTests
+
+. Once the application starts up, in your browser (perhaps in a new tab this time?) once again enter `http://localhost:8080/mappings`.  Take note of the additional endpoint mappings we now have (eg. `/api/client/{clientId}/order/{orderId}`, `/api/client/{clientId}/orders`, etc.).
+
+. Launch Postman from the apps in your Chrome browser.  Select _POST_ from the dropdown set of methods.  Enter the following parameters:
+
++
+- URL:  `localhost:8080/api/order`
+- Body:  `Raw`
+- Beside the radio buttons for `raw` and `binary`, select `JSON (application/json)` from the dropdown
+- Paste in the following JSON payload (note if you run this multiple times, you must change the `clOrdId`):
+
++
+[source,json]
+----
+{
+"clientId": "cl-91",
+"clOrdId": "91",
+"symbol" : "CADUSD",
+"price": "10",
+"side": "Sell",
+"orderQty": "25",
+"ordType": "Market"
+}
+----
+
++
+Look for an HTTP response code of 200.  You should also receive a payload in the response, something similar to:
+
++
+[source,json]
+----
+{
+    "execType": "Canceled",
+    "execId": "0dc22a71-cd06-4ed1-b13f-234660fcf4ed",
+    "totalNumReports": 0,
+    "orderId": "40c1ede8-0774-4989-b148-fac5835216ce",
+    "secondaryOrderId": 0,
+    "symbol": "CADUSD",
+    "price": 10,
+    "stopPx": 0,
+    "orderQty": 25,
+    "ordType": "Market",
+    "side": "Sell",
+    "timeInForce": "GoodTillCancel",
+    "pegOffset": 0,
+    "seqNum": 6,
+    "lastPx": 0,
+    "lastQty": 0,
+    "cumQty": 0,
+    "avgPx": 0,
+    "leavesQty": 0,
+    "transactTime": "2017-10-10T04:56:16.1605342Z",
+    "fee": 0,
+    "lastCommission": 1,
+    "cummCommission": 0,
+    "ordStatus": "Canceled",
+    "origEscrow": 0,
+    "leavesEscrow": 0,
+    "peggedPrice": 0,
+    "lastLiquidityInd": "0",
+    "submitTime": "2017-10-10T04:56:16.1587545Z",
+    "escrowRestricted": false,
+    "id": "40c1ede8-0774-4989-b148-fac5835216ce",
+    "new": true
+}
+----
+
+. Stop the application by pressing `ctrl-c`.
+
+=== Deploy the Order Manager application to PCF
+
+==== Create the PCF Services
+. From the command prompt, using the CF CLI, create a MySQL service instance in your space.  First, see what services are available for you to use.
+
++
+[source,bash]
+----
+cf marketplace
+----
+
++
+From the list of services, we can see we have a `p-mysql` database service available.  Create a service instance of it for the order manager:
+
++
+[source,bash]
+----
+cf create-service p-mysql 100mb omdb
+----
+
++
+Verify it has been created. Also verify the eureka service still exists (from the previous lab).
+
++
+[source,bash]
+----
+cf services
+----
+
+==== Create a PCF Manifest file
+
+. Verify that the `order-manager-0.0.1-SNAPSHOT.jar` was created in the `target` directory.
+
+. In the top level directory of the project, create a `manifest.yml` file with the following contents.
+
++
+NOTE: Replace <your initials> with your own initials.
+
++
+[source,yaml]
+----
+---
+applications:
+- name: om
+  host: om-<your-initials>
+  memory: 1G
+  instances: 1
+  path: target/order-manager-0.0.1-SNAPSHOT.jar
+  buildpack: java_buildpack_offline
+
+env:
+  TRUST_CERTS: api.sys.pcf.space
+
+services:
+ - omdb
+ - eureka
+----
+
++
+- The `host` property will be prepended to the default domain `apps.pcf.space` to create URL endpoint for the application.
+- The app will run in a conatiner with 1GB memory.
+- Only 1 instance of the app is required.
+- The `path` is provided to the application JAR file.
+- Instruct PCF to use the `java_buildpack_offline` to deploy the application.  (This is not required, however it does speed up the deployment process.)
+- Since we are using self-signed certificates, we must tell PCF to trust all services deployed to this installation.
+- Bind the application to the `omdb` MySQL service instance.  This is the repository.
+
+
+==== Deploy the application
+
+NOTE: From the command prompt, make sure you are in the root `order-manager` project directory, the same directory the `manifest.yml` file is.
+
+. Push the application to PCF by running the `cf push` command *from the `order-manager` directory*.
+
+. Verify the application started up correctly by checking the logs either from the Apps Manager web UI, or by entering
+
++
+[source,bash]
+----
+cf logs om --recent
+----
+
+. From Postman, test the deployed app by changing the URL to point to the order-manager URL that was assigned to your application.  eg. `om-<your-initials>.apps.pcf.space/api/order`.  Verify that you get an HTTP response code of 200 again with the JSON payload.
+
+==== Scale the application
+
+. Assume load has increased on the order manager application, and you need to scale the number of instances.  First, let's tail the logs in another terminal window (or tab):
+
++
+[source,bash]
+----
+cf logs om
+----
+
+. In the first terminal window (or tab), scale the number of instances to 2 using the CF CLI:
+
++
+[source,bash]
+----
+cf scale om -i 2
+----
+
+. Use Postman to hit the application a few times.  The requests are automatically load balanced across all the application instances.
+
+. Scale the application back to a single instance.
+
++
+[source,bash]
+----
+cf scale om -i 2
+----
+
+=== Modify the application to use Spring Cloud Services Eureka Service Registry
+
+Now let's modify the code to remove those hard-coded values, and instead use the Service Registry to look up the available exchanges and their endpoints.
+
+. Add the `@EnableDiscoveryClient` annotation and corresponding  `org.springframework.cloud.client.discovery.EnableDiscoveryClient` import to the main `OrderManagerApplication.java` source code. The final code should be:
+
++
+[source,java]
+----
+package io.pivotal.om;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+
+@SpringBootApplication
+@EnableDiscoveryClient
+public class OrderManagerApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(OrderManagerApplication.class, args);
+	}
+
+}
+----
+
+. In the `UIServices.java`,
++
+- Add the DiscoveryClient private variable after the `restTemplate` declaration.
+
++
+[source,java]
+----
+	private DiscoveryClient discoveryClient;
+----
+
++
+- Update the constructor to inject the discovery client, and set the private variable.
+
++
+[source,java]
+----
+	@Autowired
+	public UIServices(OrderRepository or, RestTemplate restTemplate, DiscoveryClient discoveryClient) {
+		this.or = or;
+		this.restTemplate = restTemplate;
+		this.discoveryClient = discoveryClient;
+	}
+----
+
++
+- Change the `getExchanges()` method to retrieve all the exchanges from the service registry.
+
++
+[source,java]
+----
+	@RequestMapping(value="/api/exchanges", method=RequestMethod.GET)
+	public List<String> getExchanges() {
+
+		List<String> services = discoveryClient.getServices();
+		List<String> exchanges = new ArrayList<String>();
+		for (String service : services) {
+			if(service.toUpperCase().startsWith("EXCHANGE_"))
+				exchanges.add(service.substring("EXCHANGE_".length()).trim().toUpperCase());
+		}
+		return exchanges;
+	}
+----
+
++
+. Modify the `lookupUrlForExchange()` method to retrieve the URL for the exchange server from the registry.
+
++
+[source,java]
+----
+	  private String lookupUrlForExchange(String symbol) {
+		  List<ServiceInstance> serviceInstances = discoveryClient.getInstances("Exchange_" + symbol);
+		  String url = serviceInstances.get(0).getUri().toString();
+		  return url;
+	  }
+----
+
++
+. The final modified class should be:
 
 +
 [source,java]
@@ -743,6 +1183,7 @@ public class UIServices {
 		ResponseEntity<ExecutionReport> re = restTemplate.exchange(url, HttpMethod.DELETE, null, ExecutionReport.class);
 		ExecutionReport eor = re.getBody();
 		or.save(eor);
+		or.flush();
 		return eor;
 	}
 
@@ -798,7 +1239,6 @@ public class UIServices {
 	}
 
 	  private String lookupUrlForExchange(String symbol) {
-//		  return "http://exchange-btcusd.apps.pcf.guru";
 		  List<ServiceInstance> serviceInstances = discoveryClient.getInstances("Exchange_" + symbol);
 		  String url = serviceInstances.get(0).getUri().toString();
 		  return url;
@@ -807,80 +1247,16 @@ public class UIServices {
 }
 ----
 
-+
-Notice the annotations on each method, they will reflect the endpoints that will be exposed for the UI.
-
-=== Update the Application Configuration
-
-. In the `src/main/resources` folder, rename the `application.properties` file to `application.yml`, and set the properties as below.
-
-+
-[source,yaml]
-----
-spring:
-  application:
-    name: OrderManager
-  jpa:
-    generate-ddl: true
-    show-sql: true
-
-management:
-  security:
-    enabled: false
-
-security:
-  basic:
-    enabled: false
-
-logging:
-  level:
-    io:
-      pivotal:
-        om: DEBUG
-config:
-  rate: 1
-
-----
-
-=== Build the project
-
-. In a command prompt window, change the the root project directory (eg. order-manager), and build the project artifacts by entering:
+. Build the updated application.
 
 +
 [source,bash]
-mvn clean package --DskipTests
-
-. Verify that the `order-manager-0.0.1-SNAPSHOT.jar` was created in the `target` directory.
-
-=== Create a PCF Manifest file
-
-. In the top level directory of the project, create a `manifest.yml` file with the following contents.
-
-+
-NOTE: Replace <your initials> with your own initials.
-
-+
-[source,yaml]
 ----
----
-applications:
-- name: om
-  host: om-<your-initials>
-  memory: 768MB
-  instances: 1
-  path: target/order-manager-0.0.1-SNAPSHOT.jar
-  buildpack: java_buildpack_offline
-
-env:
-  TRUST_CERTS: api.system.pcf.space
-
-services:
- - omdb
- - eureka
+mvn clean package
 ----
 
-=== Deploy to PCF
+. Push the application to PCF, *from the `order-manager` directory* containing the `manifest.yml` file.
 
-. Push the application to PCF by running the `cf push` command *from the `order-manager` directory*.
+. Verify the application started successfully by viewing the log output.  Also send some requests using Postman and the Client UI.
 
-. Verify the application started up correctly by checking the logs either from the Apps Manager web UI, or by entering `cf logs om`.
+. From the Apps Manager, find the Eureka service instance, and click on the _Manage_ link to view all the services that are registered.
