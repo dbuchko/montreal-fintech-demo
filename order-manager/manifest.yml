@@ -8,7 +8,7 @@ applications:
   buildpack: java_buildpack_offline
   
 env:
-  TRUST_CERTS: api.system.pcf.guru
+  TRUST_CERTS: api.system.pcf.space
   
 services:
  - omdb 
