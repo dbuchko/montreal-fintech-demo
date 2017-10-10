@@ -3,6 +3,71 @@
 [abstract]
 We're going to create a market data server that listens to events that come out of Order Books and creates a data stream of "ticks". This will be published over websockets using SignalR for clients to consume. We're going to use Reactive Extensions in order to create a functional event pipeline stream which will read from RabbitMQ on one side, aggregate and transform the data, and publish it to SignalR using LINQ like syntax.
 
+==== Modify Exchange to publish to RabbitMQ bus
+. Add NuGet dependencies to the following packages:
+.. `RabbitMQ.Client`
+.. `Steeltoe.CloudFoundry.Connector.Rabbit`
+. Register RabbitMQ in Startup.cs. Edit it as following:
++
+[source,c#]
+----
+using Steeltoe.CloudFoundry.Connector.Rabbit;
+...
+public void ConfigureServices(IServiceCollection services)
+{
+...
+    services.AddRabbitConnection(Configuration);
+...
+}
+----
+
+==== Modify Controller to post execution reports on Rabbit exchange
+. Edit OrderController.cs
+.. Inject rabbit connection factory into constructor:
++
+[source,c#]
+----
+using RabbitMQ.Client;
+...
+private readonly ConnectionFactory _rabbitConnection;
+
+// GET api/values
+public OrderController(OrderbookService orderbookService, ConnectionFactory rabbitConnection, ExchangeContext repository)
+{
+    _orderbookService = orderbookService;
+    _rabbitConnection = rabbitConnection;
+    _repository = repository;
+}
+----
+.. Modify ProcessExecutionReports method to publish on the bus:
++
+[source,c#]
+----
+private void ProcessExecutionReports(List<ExecutionReport> reports)
+{
+    reports.ForEach(x => x.SeqNum = _orderbookService.SeqNum++);
+    _repository.ExecutionReports.AddRange(reports);
+    _repository.SaveChanges();
+    using (var connection = _rabbitConnection.CreateConnection())
+    using (var channel = connection.CreateModel())
+    {
+        channel.ExchangeDeclare(exchange: "execution-reports", type: "fanout", durable: false, autoDelete: false);
+        channel.BasicPublish(
+            exchange: "execution-reports",
+            routingKey: _orderbookService.OrderBook.Symbol,
+            basicProperties: null,
+            body: Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(reports)));
+    }
+}
+----
+. Create instance of rabbitmq service and bind it to exchange
+----
+> cf create-service p-rabbitmq standard rabbitmq
+> cf bind-service exchange_cadusd rabbitmq
+----
+. Publish and push the app as per steps from previous lab.
+
+
 ==== Create new web project
 . Create new ASP.NET Core 2.0 project called MarketDataServer in our solution
 .. Right click on solution > Add > New Project
@@ -236,10 +301,7 @@ applications:
 . Select the file in Solution Explorer, and in Properties window change _Copy to output directory_ to `Copy always`
 
 ==== Publish to Pivotal Cloud Foundry
-. Create instance of rabbitmq service
-----
-> cf create-service p-rabbitmq standard rabbitmq
-----
+
 
 . Disable MVC Razer view compilation (currently not supported in .NET Core 2.0). Right click on MarketDataServer -> Edit MarketDataServer.csproj. Modify the header as following:
 +
@@ -260,3 +322,5 @@ applications:
 . Drop into command line and switch into the `..\publish\MarketDataServer` folder
 . Publish the app via `cf push`
 * Notice we didn't give the app the name. In this case it will use the settings found in the manifest to automatically give the app the name, the route, the scaling options, and bind it to the required services
+
+
